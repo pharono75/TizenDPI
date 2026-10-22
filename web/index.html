@@ -1,25 +1,30 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'self' http://127.0.0.1:8787">
-    <title>TizenDPI diagnostics</title>
-    <link rel="stylesheet" href="style.css">
-    <script src="app.js" defer></script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'self' http://127.0.0.1:8787">
+<title>TizenDPI diagnostics</title>
+<link rel="stylesheet" href="style.css">
+<script src="app.js" defer></script>
 </head>
 <body>
-    <h1>TizenDPI diagnostics</h1>
-    <p>Diagnostic-only service. The proxy is disabled.</p>
-    <p id="node-version">TV Node version: waiting for service</p>
-    <ul id="checks">
-        <li data-check="service">HTTP service: waiting</li>
-        <li data-check="tcp">TCP 443: waiting</li>
-        <li data-check="dns">DNS: waiting</li>
-        <li data-check="https">Outgoing HTTPS: waiting</li>
-    </ul>
-    <button id="refresh" type="button">Refresh</button>
-    <h2>Recent diagnostic errors</h2>
-    <pre id="errors">No errors reported</pre>
+<h1>TizenDPI diagnostics</h1>
+<p id="node-version">TV Node version: waiting for service</p>
+<p id="proxy-state">Experimental proxy: disabled</p>
+<div class="controls">
+<button id="run-direct" type="button">Run direct HTTPS checks</button>
+<button id="enable-proxy" type="button">Enable local proxy experiment</button>
+<button id="run-proxy" type="button">Run checks through proxy</button>
+<button id="disable-proxy" type="button">Disable proxy</button>
+</div>
+<p id="message" role="status">No checks have been started.</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Site</th><th>Mode</th><th>DNS</th><th>TCP</th><th>TLS</th><th>HTTP</th><th>Total ms</th><th>Error</th></tr></thead>
+<tbody id="results"><tr><td colspan="8">Run a check to populate results.</td></tr></tbody>
+</table></div>
+<p id="split-info">ClientHello split is experimental: separate socket writes do not guarantee separate TCP segments.</p>
+<h2>Recent diagnostic errors</h2>
+<pre id="errors">No errors reported</pre>
 </body>
 </html>

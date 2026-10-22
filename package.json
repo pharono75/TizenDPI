@@ -1,14 +1,12 @@
 {
   "name": "tizendpi",
   "appName": "TizenDPI",
-  "version": "0.2.0",
-  "description": "Loopback-only diagnostics module for Samsung Tizen TV",
+  "version": "0.3.0",
+  "description": "Loopback-only diagnostics and opt-in CONNECT experiment for Samsung Tizen TV",
   "packageType": "app",
   "appPath": "web/index.html",
   "serviceFile": "service/index.js",
   "keys": [],
   "license": "MIT",
-  "scripts": {
-    "test": "node tests/smoke.js"
-  }
+  "scripts": { "test": "node tests/smoke.js" }
 }
