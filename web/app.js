@@ -1,6 +1,7 @@
 (function () {
     'use strict';
     var api = 'http://127.0.0.1:8787';
+    var apiVersion = '0.3.0';
     var busy = false;
     function request(method, path, callback, timeout) {
         var xhr = new XMLHttpRequest(), ended = false;
@@ -10,8 +11,11 @@
         xhr.onreadystatechange = function () {
             if (xhr.readyState !== 4) return;
             if (xhr.status < 200 || xhr.status >= 300) return finish(new Error('HTTP_' + xhr.status));
-            try { finish(null, xhr.responseText ? JSON.parse(xhr.responseText) : {}); }
-            catch (err) { finish(new Error('INVALID_JSON')); }
+            try {
+                var data = xhr.responseText ? JSON.parse(xhr.responseText) : {};
+                if (!data || data.apiVersion !== apiVersion) return finish(new Error('API_VERSION_MISMATCH'));
+                finish(null, data);
+            } catch (err) { finish(new Error('INVALID_JSON')); }
         };
         xhr.onerror = function () { finish(new Error('LOOPBACK_REQUEST_FAILED')); };
         xhr.onabort = function () { finish(new Error('REQUEST_ABORTED')); };
@@ -44,8 +48,13 @@
         document.getElementById('errors').textContent = data.logs && data.logs.length ? data.logs.join('\n') : 'No errors reported';
         updateStatus();
     }
+    function clearResults(message) {
+        var body = document.getElementById('results'), tr = document.createElement('tr'), td = document.createElement('td');
+        body.innerHTML = ''; td.colSpan = 8; td.textContent = message; tr.appendChild(td); body.appendChild(tr);
+    }
     function run(mode) {
         if (busy) return; busy = true;
+        clearResults('Running ' + mode + ' checks…');
         document.getElementById('message').textContent = 'Running ' + mode + ' checks…';
         request('POST', '/api/test?mode=' + mode, function (error, data) {
             busy = false; if (error) return showError(error); render(data);
