@@ -14,6 +14,8 @@ Loopback-only diagnostics and an opt-in HTTP CONNECT experiment for Samsung Tize
 
 
 
+The UI and service enforce the same API contract version 0.3.0. A missing or different apiVersion is shown as API_VERSION_MISMATCH. Each manual run clears the prior result rows while a new check is pending, so an earlier DNS_TIMEOUT cannot remain visible as the current run.
+
 The diagnostic API binds to `127.0.0.1:8787` and accepts browser-originated control requests only from the TizenBrew module origin `http://127.0.0.1:8081`; it does not enable wildcard CORS. The optional CONNECT proxy binds to `127.0.0.1:8788` only after the user presses Enable. It accepts CONNECT only to port 443 for these exact hostnames: `www.youtube.com`, `youtubei.googleapis.com`, `i.ytimg.com`, `cdn.jsdelivr.net`. The UI exposes no arbitrary destination field. It rejects private, loopback, link-local, carrier-grade NAT and documentation DNS answers. Concurrent tunnels are capped at two; CONNECT header accounting and initial TLS record buffering are bounded; timeouts are applied. Disable closes the listener and current tunnel sockets. The proxy is off after service restart.
 
 
@@ -50,7 +52,7 @@ node tests\smoke.js
 
 
 
-The offline smoke test checks manifest wiring, source compatibility constraints, fixed loopback binds, allowlist and certificate verification; it starts the service locally, checks status/CORS, verifies proxy-off by default, toggles it on/off, and confirms a non-allowlisted CONNECT is rejected. It does not emulate TV WebKit, make Internet probes, or prove TCP segmentation on the UE49M6500.
+The offline smoke test checks manifest wiring, source compatibility constraints, fixed loopback binds, allowlist and certificate verification; it starts the service locally, checks status/CORS, verifies proxy-off by default, toggles it on/off, and confirms a non-allowlisted CONNECT is rejected. It exercises all UI controls and result rendering against a fixture, including a delayed DNS callback after timeout. It does not emulate TV WebKit, make Internet probes, or prove TCP segmentation on the UE49M6500.
 
 
 

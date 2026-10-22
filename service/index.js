@@ -6,9 +6,11 @@
     var tls = require('tls');
     var BIND = '127.0.0.1';
     var UI_ORIGIN = 'http://127.0.0.1:8081';
+    var API_VERSION = '0.3.0';
     var API_PORT = Number(process.env.TIZENDPI_TEST_PORT || 8787);
     var PROXY_PORT = Number(process.env.TIZENDPI_TEST_PROXY_PORT || 8788);
     var TIMEOUT = 5000;
+    var DNS_TIMEOUT = Number(process.env.TIZENDPI_TEST_DNS_TIMEOUT_MS || TIMEOUT);
     var TLS_TIMEOUT = 8000;
     var MAX_PROXY_CONNECTIONS = 2;
     var MAX_CONNECT_HEADER = 4096;
@@ -110,7 +112,7 @@
         var timer = setTimeout(function () {
             if (done) return; done = true; row.dns.ms = elapsed(start); row.dns.error = 'DNS_TIMEOUT';
             row.error = 'DNS_TIMEOUT'; callback(null, 'DNS_TIMEOUT');
-        }, TIMEOUT);
+        }, DNS_TIMEOUT);
         try {
             dns.lookup(host, function (err, address) {
                 if (done) return; done = true; clearTimeout(timer); row.dns.ms = elapsed(start);
@@ -132,7 +134,7 @@
             callback(error || null);
         }
         socket.on('data', function (chunk) {
-            var text = chunk.toString('latin1'), end = text.indexOf('\r\n'), match;
+            var text = chunk.toString('binary'), end = text.indexOf('\r\n'), match;
             if (end >= 0) line += text.slice(0, end);
             else if (line.length < 64) line += text.slice(0, 64 - line.length);
             if (line.length > 64) line = line.slice(0, 64);
@@ -238,6 +240,7 @@
         next();
     }
     function sendJson(response, status, data) {
+        if (data && typeof data === 'object') data.apiVersion = API_VERSION;
         response.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store',
             'Access-Control-Allow-Origin': UI_ORIGIN, 'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
             'Access-Control-Allow-Headers': 'Content-Type', 'X-Content-Type-Options': 'nosniff' });
