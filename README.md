@@ -1,86 +1,127 @@
-﻿# TizenDPI diagnostic module
+# TizenDPI 0.3.0
 
-This project is a TizenBrew GitHub Module for diagnostics only. It has no proxy,
-SOCKS, traffic interception, route changes, or certificate handling.
 
-## TizenBrew compatibility
 
-The module manifest uses packageType=app, appName=TizenDPI,
-appPath=web/index.html, and serviceFile=service/index.js. TizenBrew fetches the
-manifest and the service file through jsDelivr. The service file is a single
-self-contained ES5 script: it imports only Node core modules http, net, dns and
-https, and does not use relative requires or external packages. It starts at
-script evaluation, matching serviceLauncher.js calling vm.runInContext.
+Loopback-only diagnostics and an opt-in HTTP CONNECT experiment for Samsung Tizen. It does not change system routing, intercept TLS certificates, configure a VPN, or start a proxy automatically.
 
-The service binds to the literal address 127.0.0.1. The port override
-TIZENDPI_TEST_PORT exists only for local tests; no environment variable can
-change the bind address. The TV default is TCP 8787. Errors are logged as
-probe names and error codes only. Request URLs, headers, bodies, credentials,
-and network contents are never logged.
 
-The UI uses an external ES5 script and stylesheet. Its CSP allows only same
-origin assets and the loopback status endpoint. The UI sends a simple GET with
-no credentials; the service answers with Access-Control-Allow-Origin: * and
-supports OPTIONS. Samsung lists CORS and CSP Level 1 support for the 2017
-Tizen 3.0 web engine, but this particular app/module origin and loopback
-combination still must be checked on the TV.
 
-## Local tests
+## Runtime behavior
 
-Requires Node.js on the PC and no npm dependencies.
 
-From PowerShell:
-  Set-Location C:\TizenDPI
-  node --check service\index.js
-  node --check web\app.js
-  node --check tests\smoke.js
-  node tests\smoke.js
 
-The status endpoint runs independent TCP, DNS and HTTPS probes to example.com.
-The PC test verifies the manifest and paths, built-in-only imports, ES5-oriented
-source, fixed loopback bind, CSP/CORS headers, Node version reporting and the
-status response shape. It does not require outbound internet probes to pass.
+`package.json` is a TizenBrew app module (`appPath: web/index.html`, `serviceFile: service/index.js`). The self-contained service starts when TizenBrew evaluates that file. It uses Node core modules only (`http`, `net`, `dns`, `tls`) and ES5 syntax intended for the UE49M6500's confirmed Node v4.4.3 runtime.
 
-## Manual GitHub Module publication
 
-No GitHub repository is configured or published by this project. After choosing
-a public repository, put these files at its root and use its default branch:
-  package.json
-  service/index.js
-  web/index.html
-  web/app.js
-  web/style.css
 
-For a repository owner/repository and branch main, verify these URLs in a
-browser before registering the module:
-  https://cdn.jsdelivr.net/gh/OWNER/REPOSITORY@main/package.json
-  https://cdn.jsdelivr.net/gh/OWNER/REPOSITORY@main/service/index.js
-  https://cdn.jsdelivr.net/gh/OWNER/REPOSITORY@main/web/index.html
-  https://cdn.jsdelivr.net/gh/OWNER/REPOSITORY@main/web/app.js
-  https://cdn.jsdelivr.net/gh/OWNER/REPOSITORY@main/web/style.css
+The diagnostic API binds to `127.0.0.1:8787` and accepts browser-originated control requests only from the TizenBrew module origin `http://127.0.0.1:8081`; it does not enable wildcard CORS. The optional CONNECT proxy binds to `127.0.0.1:8788` only after the user presses Enable. It accepts CONNECT only to port 443 for these exact hostnames: `www.youtube.com`, `youtubei.googleapis.com`, `i.ytimg.com`, `cdn.jsdelivr.net`. The UI exposes no arbitrary destination field. It rejects private, loopback, link-local, carrier-grade NAT and documentation DNS answers. Concurrent tunnels are capped at two; CONNECT header accounting and initial TLS record buffering are bounded; timeouts are applied. Disable closes the listener and current tunnel sockets. The proxy is off after service restart.
 
-The first URL must return the module manifest and the second the standalone
-service source. TizenBrew's supported GitHub Module field takes OWNER/REPOSITORY;
-its loader then uses jsDelivr. A local path, private repository, uncommitted
-files, or a repository name alone cannot produce working jsDelivr URLs.
 
-## Device test after publication
 
-No TV installation is performed by these steps automatically.
+Each manual Direct or Proxy run checks DNS, TCP, TLS with SNI and certificate verification enabled, then reads only the first HTTP status line. No response body or headers are stored. HTTP 403/404 is reported as an HTTP response, distinct from DNS/TCP/TLS errors. Checks run only on button press, one endpoint at a time. Logs contain phase names and error codes, not payloads, tokens, URLs, or headers.
 
-1. Confirm the five jsDelivr URLs return HTTP 200 and inspect their contents.
-2. In TizenBrew, add the public OWNER/REPOSITORY with its GitHub Module control
-   and launch TizenDPI.
-3. The page should report the TV's actual process.version, bind address
-   127.0.0.1 and port 8787, then show TCP, DNS and HTTPS results.
-4. If the page says the loopback request failed, use TizenBrew's service status
-   and the TV Web Inspector console to distinguish service startup, CSP and
-   CORS errors. This exact cross-port request has not yet been run on the TV.
-5. Do not consider the network probes evidence of YouTube proxying; the proxy
-   has intentionally been removed.
 
-TizenBrew's service source has a compatibility branch for process.version
-v4.4.3 on Tizen 3. The TV's actual Node version remains unknown until the
-diagnostic module is manually published and launched. This service uses syntax
-and core APIs available in Node 4.4.3, but the local runtime test uses the
-installed PC Node version.
+
+The proxy buffers the first client TLS record (at most 16,389 bytes). If it parses as a TLS record, the relay writes two ordered pieces, preferring a split inside SNI. This is only an experiment: `socket.write()` calls are stream writes and do not guarantee separate TCP segments. TLS termination and certificate substitution are not performed. This proxy cannot affect YouTube traffic unless a client explicitly uses CONNECT; the system WebView proxy is not changed.
+
+
+
+## Local checks
+
+
+
+No npm dependencies are needed. From PowerShell:
+
+
+
+```powershell
+
+Set-Location C:\TizenDPI
+
+node --check service\index.js
+
+node --check web\app.js
+
+node --check tests\smoke.js
+
+node tests\smoke.js
+
+```
+
+
+
+The offline smoke test checks manifest wiring, source compatibility constraints, fixed loopback binds, allowlist and certificate verification; it starts the service locally, checks status/CORS, verifies proxy-off by default, toggles it on/off, and confirms a non-allowlisted CONNECT is rejected. It does not emulate TV WebKit, make Internet probes, or prove TCP segmentation on the UE49M6500.
+
+
+
+## Prepare/publish pharono75/TizenDPI manually
+
+
+
+This is the existing repository `https://github.com/pharono75/TizenDPI`. No commit or push is performed in this change. Review the diff and tests, then commit/push only when authorized:
+
+
+
+```powershell
+
+Set-Location C:\TizenDPI
+
+git status --short
+
+git diff --check
+
+git diff
+
+# after review and your approval:
+
+git add package.json service/index.js web/index.html web/app.js web/style.css tests/smoke.js README.md docs/RESEARCH.md
+
+git commit -m "Add YouTube diagnostics and opt-in loopback CONNECT experiment"
+
+git push origin main
+
+```
+
+
+
+After push, verify the following public jsDelivr URLs return the intended files before using TizenBrew:
+
+
+
+- `https://cdn.jsdelivr.net/gh/pharono75/TizenDPI@main/package.json`
+
+- `https://cdn.jsdelivr.net/gh/pharono75/TizenDPI@main/service/index.js`
+
+- `https://cdn.jsdelivr.net/gh/pharono75/TizenDPI@main/web/index.html`
+
+- `https://cdn.jsdelivr.net/gh/pharono75/TizenDPI@main/web/app.js`
+
+- `https://cdn.jsdelivr.net/gh/pharono75/TizenDPI@main/web/style.css`
+
+
+
+CDN cache may lag after push; verify exact contents and version before updating the TV.
+
+
+
+## Manual TV update (not performed)
+
+
+
+1. Confirm the five jsDelivr URLs above return the 0.3.0 files.
+
+2. On the TV, open TizenBrew and refresh/update the existing `pharono75/TizenDPI` GitHub Module entry using its supported module manager, then launch TizenDPI. If no refresh action exists, remove and re-add only this module via the supported UI. No SDB or install command is used by this project.
+
+3. Confirm Node v4.4.3 and `127.0.0.1:8787`; click **Run direct HTTPS checks**.
+
+4. If you choose to evaluate the experiment, click **Enable local proxy experiment**, then **Run checks through proxy**. Click **Disable proxy** afterward. Restart also leaves it disabled.
+
+5. Review per-stage outcomes. HTTP 403/404 means an HTTP response arrived; it does not alone prove blocking. Proxy success does not prove distinct TCP segments or affect YouTube's own app traffic.
+
+
+
+## TizenTube integration research
+
+
+
+Current TizenTube declares `packageType: mods`, targets YouTube TV, injects `dist/userScript.js`, and runs `dist/service.js`. The userscript entry imports app features; the service source runs an Express/CORS dial API and launches TizenBrew by app-control, rather than exposing a generic CONNECT proxy. Its docs designate `TizenTubeOld.wgt` for Tizen 3/4/5/5.5. The documented `TizenTubeProxyAddress` build belongs to newer TizenTube Cobalt (Tizen 6+), with a separate Cobalt proxy. Neither configures a device-wide HTTP proxy for the legacy YouTube TV WebView. The WebView will not automatically issue CONNECT through this listener. A real integration requires a TizenTube-specific change that explicitly routes selected application requests through a relay and handles CORS, credentials, API semantics, and media range/streaming. This project does not patch TizenTube.
