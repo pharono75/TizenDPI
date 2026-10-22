@@ -1,4 +1,4 @@
-﻿'use strict';
+'use strict';
 var dns = require('dns');
 var counts = {};
 dns._tizendpiOriginalLookup = dns.lookup;
@@ -15,4 +15,3 @@ dns.lookup = function (host, options, callback) {
         callback(error);
     });
 };
-
