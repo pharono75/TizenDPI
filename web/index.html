@@ -1,0 +1,25 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'self' http://127.0.0.1:8787">
+    <title>TizenDPI diagnostics</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="app.js" defer></script>
+</head>
+<body>
+    <h1>TizenDPI diagnostics</h1>
+    <p>Diagnostic-only service. The proxy is disabled.</p>
+    <p id="node-version">TV Node version: waiting for service</p>
+    <ul id="checks">
+        <li data-check="service">HTTP service: waiting</li>
+        <li data-check="tcp">TCP 443: waiting</li>
+        <li data-check="dns">DNS: waiting</li>
+        <li data-check="https">Outgoing HTTPS: waiting</li>
+    </ul>
+    <button id="refresh" type="button">Refresh</button>
+    <h2>Recent diagnostic errors</h2>
+    <pre id="errors">No errors reported</pre>
+</body>
+</html>

@@ -1,0 +1,17 @@
+﻿body {
+    font-family: Arial, sans-serif;
+    font-size: 22px;
+    color: #f3f3f3;
+    background: #14202a;
+    margin: 36px;
+}
+h1, h2 { color: #83d5ff; }
+li { margin: 14px 0; }
+button { font-size: 20px; padding: 10px 18px; }
+pre {
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
+    color: #ffd18a;
+    background: #202b35;
+    padding: 12px;
+}
